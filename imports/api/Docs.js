@@ -1,10 +1,8 @@
 import { Mongo } from 'meteor/mongo';
 
 export const Docs = new Mongo.Collection('links');
-import {isDebug} from "../isDebug";
 import {Meteor} from "meteor/meteor";
 import Delta from 'quill-delta'
-import {Random} from "meteor/random";
 Meteor.methods({
   userDelta(docId, change, opId ){
     const doc = Docs.findOne(docId)
@@ -16,10 +14,13 @@ Meteor.methods({
         content:delta,
         lastOp:change,
         lastOpId:opId,
-        prevOpId:doc.lastOpId
+        prevOpId:doc.lastOpId,
+        lastEdit:new Date(),
+      },
+      $inc:{
+        edits:1
       }
     })
   }
 })
 
- 

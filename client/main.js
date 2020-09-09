@@ -6,7 +6,7 @@ import { Docs } from '/imports/api/Docs';
 import Quill from 'quill/dist/quill.core.js'
 import 'quill/dist/quill.core.css'
 
-let setup=false
+import Delta from 'quill-delta'
 
 Meteor.startup(() => {
   let docId=window.location.pathname.slice(1)
@@ -14,7 +14,6 @@ Meteor.startup(() => {
     docId=Random.id()
     history.replaceState(null, '', '/'+docId)
   }
-
 
   let lastApplied=null
   const quill = new Quill('#editor')
@@ -32,27 +31,26 @@ Meteor.startup(() => {
     const doc=Docs.findOne(docId)
 
     if(!doc) return
-    console.debug(lastApplied+' vs '+doc.prevOpId)
+
+
+    if(!lastApplied){
+      lastApplied=doc.lastOpId
+      document.body.removeChild(document.getElementById('loadingText'))
+      return quill.setContents(doc.content,  'api')
+    }
+
     // We applied that change already
-    if(lastApplied===doc.lastOpId) return console.debug('ignored')
+    if(lastApplied===doc.lastOpId) return
+
     // We were on the same page
     if(lastApplied === doc.prevOpId){
-
-      console.debug('update')
-      // const sel=quill.getSelection()
       quill.updateContents(doc.lastOp,  'api')
-      // quill.setSelection(sel,'api')
       lastApplied=doc.lastOpId
       return
     }
 
-    console.debug('set')
-    quill.setContents(doc.content,  'api')
-    quill.blur()
+    const diff = new Delta(quill.getContents()).diff(new Delta(doc.content))
+    quill.updateContents(diff,  'api')
     lastApplied=doc.lastOpId
-    if(!setup){
-      setup=true
-      document.body.removeChild(document.getElementById('loadingText'))
-    }
   })
 });

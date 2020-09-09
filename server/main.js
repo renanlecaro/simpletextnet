@@ -1,6 +1,5 @@
 import { Meteor } from 'meteor/meteor';
 import { Docs } from '/imports/api/Docs';
-
 import { Random } from 'meteor/random'
 
 const defaultText=`
@@ -20,6 +19,8 @@ Meteor.publish('docById', function (id) {
       Docs.insert({
       _id:id,
       createdAt:new Date(),
+      edits:1,
+      lastEdit:new Date(),
       content:[
           { insert:defaultText},
         ],
@@ -32,4 +33,5 @@ Meteor.publish('docById', function (id) {
   return Docs.find(id)
 
 })
+
 
