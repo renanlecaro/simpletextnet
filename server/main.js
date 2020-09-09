@@ -23,8 +23,10 @@ Meteor.publish('docById', function (id) {
       content:[
           { insert:defaultText},
         ],
-      updates:[],
-      currentUpdateId:Random.id()
+
+        lastOp:[],
+        lastOpId:Random.id(),
+        prevOpId:Random.id()
     })
   }
   return Docs.find(id)
