@@ -3,7 +3,8 @@ import Quill from "quill/dist/quill.core";
 import {Meteor} from "meteor/meteor";
 import {Tracker} from "meteor/tracker";
 import {Docs} from "../api/Docs";
-import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.core.css' 
+import Delta from 'quill-delta'
 
 export function setupUI(){
 
@@ -42,7 +43,7 @@ export function setupUI(){
     const doc=Docs.findOne(docId)
 
     // The doc might still be loading
-    if(!doc) return
+    if(!doc) return console.debug('No document yet')
 
 
     // The doc loaded for the first time
@@ -53,12 +54,12 @@ export function setupUI(){
       lastApplied=doc.lastOpId
       // Remove the loading screen indicator
       document.body.removeChild(document.getElementById('loadingText'))
-      return
+      return console.debug('Loaded content')
     }
 
     // We applied that change already, the last edit
     // to the doc was ours, we can ignore it.
-    if(lastApplied===doc.lastOpId) return
+    if(lastApplied===doc.lastOpId) return console.debug('Local change')
 
     // The last edit happened to the version of the doc we're seeing,
     // but was done by someone else.
@@ -67,7 +68,7 @@ export function setupUI(){
       quill.updateContents(doc.lastOp,  'api')
       // and store which version we're using
       lastApplied=doc.lastOpId
-      return
+      return console.debug('Updated content')
     }
 
     // The edits happened faster than we could update, and therefore
@@ -79,5 +80,6 @@ export function setupUI(){
     const diff = new Delta(quill.getContents()).diff(new Delta(doc.content))
     quill.updateContents(diff,  'api')
     lastApplied=doc.lastOpId
+    return console.debug('Diffed content because we were out of sync')
   })
 }
