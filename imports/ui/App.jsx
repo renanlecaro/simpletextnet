@@ -14,14 +14,16 @@ export function App({docId,userId}){
   });
  if(!doc) return 'Loading'
 
- return  <div id={'editor'}>
-   {
-     doc.parts.map(part=><Input key={part.id} part={part} docId={docId} userId={userId}/>)
-   }
+ return  <div>
+   <div id={'editor'}>
+     {
+       doc.parts.map(part=><Input key={part.id} part={part} docId={docId} userId={userId}/>)
+     }
+   </div>
    <footer>
      <h2>Magic paper</h2>
-     <p>Create a document, edit it together, on mobile and on desktop.</p>
-     <p>This only supports plain text</p>
+     <p><a href={'/'} target={'_blank'}> Create a new document</a>, share the link you're on, and edit it with your friends. </p>
+     <p>This only supports plain text (no formatting).</p>
      <p>Magic Paper, brought to you by <a href={'https://renanlecaro.github.io/'}>Renan LE CARO</a></p>
      <p>I make 0 garantee about this software, use it at your own risks. </p>
    </footer>

@@ -1,5 +1,6 @@
 body {
-  padding: 20px 0;
+  margin: 0;
+  padding: 0;
   font-family: sans-serif;
   background: #fff;
   color: #666;
@@ -8,14 +9,18 @@ body {
   box-sizing: border-box;
 }
 
+#editor{
+  min-height: 100vh;
+  padding: 20px 0;
+}
 #editor textarea{
-  width: 100%;
+  width: calc( 100% - 40px);
+  margin: 0 20px;
   border: none;
   color: black;
   font-size: 16px;
   line-height: 30px;
   padding: 0 20px;
-  margin: 0;
   border-radius: 0;
   resize: none !important;
   font-family: inherit;
@@ -30,4 +35,15 @@ body {
 #editor textarea.other{
   background: #eee;
   color: #999;
+}
+
+footer{
+  color: #484848;
+  background: linear-gradient(#e8e8e8, white , white);
+  padding: 40px;
+  margin: 0;
+}
+
+footer a{
+  color: inherit;
 }
