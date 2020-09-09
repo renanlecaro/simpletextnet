@@ -11,7 +11,22 @@ body {
 
 #editor{
   min-height: 100vh;
+}
+#editor>div{
+  min-height: 100vh;
+  position: relative;
+  background: white;
+  z-index: 2;
   padding: 20px 0;
+}
+#loadingText{
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  font-size: 20px;
+  text-align: center;
+  z-index: 1;
 }
 #editor textarea{
   width: calc( 100% - 40px);

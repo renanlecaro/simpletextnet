@@ -5,11 +5,12 @@ import { App } from '/imports/ui/App';
 import { Random } from 'meteor/random'
 
 Meteor.startup(() => {
-  let id=window.location.pathname.slice(1)
-  if(!id){
-    id=Random.id()
-    history.replaceState(null, '', '/'+id)
+  let docId=window.location.pathname.slice(1)
+  if(!docId){
+    docId=Random.id()
+    history.replaceState(null, '', '/'+docId)
   }
   const userId=Random.id()
-  render(<App docId={id} userId={userId}/>, document.getElementById('react-target'));
+
+  render(<App docId={docId} userId={userId}/>, document.getElementById('editor'));
 });

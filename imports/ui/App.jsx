@@ -3,6 +3,9 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { Docs } from '/imports/api/Docs';
 
 import TextareaAutosize from 'react-autosize-textarea';
+import {Meteor} from "meteor/meteor";
+import {isDebug} from "../isDebug";
+
 
 export function App({docId,userId}){
   const { doc } = useTracker(() => {
@@ -12,30 +15,22 @@ export function App({docId,userId}){
       doc: Docs.findOne(docId),
     });
   });
- if(!doc) return 'Loading'
+ if(!doc) return null
 
- return  <div>
-   <div id={'editor'}>
+ startPinging(docId,userId )
+ return  <div >
      {
        doc.parts.map(part=><Input key={part.id} part={part} docId={docId} userId={userId}/>)
      }
    </div>
-   <footer>
-     <h2>Magic paper</h2>
-     <p><a href={'/'} target={'_blank'}> Create a new document</a>, share the link you're on, and edit it with your friends. </p>
-     <p>This only supports plain text (no formatting).</p>
-     <p>Magic Paper, brought to you by <a href={'https://renanlecaro.github.io/'}>Renan LE CARO</a></p>
-     <p>I make 0 garantee about this software, use it at your own risks. </p>
-   </footer>
 
-  </div>
 }
 
 class Input extends React.Component{
   state={
     value:this.props.part.text
   }
-  componentWillReceiveProps(nextProps, nextContext) {
+  UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
     if(nextProps.part.editing!=this.props.userId){
       this.setState({value:nextProps.part.text})
     }
@@ -53,9 +48,31 @@ class Input extends React.Component{
         Meteor.call('partChange', docId, part.id, userId, e.target.value)
         this.setState({value:e.target.value})
       }}
+      onKeyUp={e=>{
+        if(e.target.value) return
+
+        if(e.keyCode==8 || e.keyCode==46){
+          Meteor.call('removePart', docId, part.id, userId)
+        }
+
+      }}
       disabled={status==='other'}
       onFocus={e=>Meteor.call('partFocus',docId, part.id, userId)}
       onBlur={e=>Meteor.call('partBlur', docId, part.id, userId, e.target.value)}
     />
   }
+}
+
+
+let pinging = false
+function startPinging(docId,userId ) {
+  if(pinging) return
+  pinging=true
+  function ping() {
+    requestAnimationFrame(()=>{
+      Meteor.call('ping',docId,userId)
+    })
+  }
+  ping()
+  setInterval(ping, isDebug ? 5*1000:30*1000)
 }
