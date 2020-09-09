@@ -2,22 +2,30 @@ body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
-  background: #fff;
+  background: #eee;
   color: #666;
+  font-size: 16px;
 }
 *{
   box-sizing: border-box;
 }
-
 #editor{
   min-height: 100vh;
+
 }
-#editor>div{
+#editor>.ql-editor , footer>div{
+  padding: 40px;
   min-height: 100vh;
-  position: relative;
+  color: #000;
+  font-size: 14px;
+  line-height: 28px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+#editor>.ql-editor{
+
   background: white;
-  z-index: 2;
-  padding: 20px 0;
+
 }
 #loadingText{
   position: absolute;
@@ -28,35 +36,9 @@ body {
   text-align: center;
   z-index: 1;
 }
-#editor textarea{
-  width: calc( 100% - 40px);
-  margin: 0 20px;
-  border: none;
-  color: black;
-  font-size: 16px;
-  line-height: 30px;
-  padding: 0 20px;
-  border-radius: 0;
-  resize: none !important;
-  font-family: inherit;
-}
-#editor textarea.none{
-  background: none;
-}
-#editor textarea.me{
-  color: #000;
-  outline: 1px solid deepskyblue;
-}
-#editor textarea.other{
-  background: #eee;
-  color: #999;
-}
 
 footer{
   color: #484848;
-  background: linear-gradient(#e8e8e8, white , white);
-  padding: 40px;
-  margin: 0;
 }
 
 footer a{
