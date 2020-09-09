@@ -22,9 +22,7 @@ body {
   margin: 0 auto;
 }
 #editor>.ql-editor{
-
   background: white;
-
 }
 #loadingText{
   position: absolute;
@@ -34,10 +32,6 @@ body {
   font-size: 20px;
   text-align: center;
   z-index: 1;
-}
-
-footer{
-  color: #484848;
 }
 
 footer a{
