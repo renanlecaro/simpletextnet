@@ -1,0 +1,33 @@
+body {
+  padding: 20px 0;
+  font-family: sans-serif;
+  background: #fff;
+  color: #666;
+}
+*{
+  box-sizing: border-box;
+}
+
+#editor textarea{
+  width: 100%;
+  border: none;
+  color: black;
+  font-size: 16px;
+  line-height: 30px;
+  padding: 0 20px;
+  margin: 0;
+  border-radius: 0;
+  resize: none !important;
+  font-family: inherit;
+}
+#editor textarea.none{
+  background: none;
+}
+#editor textarea.me{
+  color: #000;
+  outline: 1px solid deepskyblue;
+}
+#editor textarea.other{
+  background: #eee;
+  color: #999;
+}
