@@ -1,6 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { Docs } from '/imports/api/Docs';
-import { Random } from 'meteor/random'
+import { Docs } from '/imports/api/Docs'; 
 
 const defaultText=`
 This is a real time text editor. 
@@ -19,19 +18,14 @@ Meteor.publish('docById', function (id) {
       Docs.insert({
       _id:id,
       createdAt:new Date(),
-      edits:1,
-      lastEdit:new Date(),
       content:[
           { insert:defaultText},
-        ],
-
-        lastOp:[],
-        lastOpId:Random.id(),
-        prevOpId:Random.id()
+      ],
+      lastEdit:new Date(),
+      edits:1,
     })
   }
   return Docs.find(id)
-
 })
 
 
