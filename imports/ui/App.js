@@ -5,7 +5,7 @@ import {Tracker} from "meteor/tracker";
 import {Docs} from "../api/Docs";
 import 'quill/dist/quill.core.css'
 import Delta from 'quill-delta'
-import {userName} from "./userName";
+import {getUserName, renameMySelf, userColor} from "./userName";
 
 
 export function setupUI(){
@@ -30,8 +30,18 @@ export function setupUI(){
   });
 
   quill.on('selection-change', function (range) {
-    Meteor.call('setUserSelection',docId, userName, range )
+    Meteor.call('setUserSelection',docId, getUserName(), range )
   })
+
+  document.getElementById('renameMySelf')
+    .addEventListener('click',e=>{
+      e.preventDefault()
+      const oldName=getUserName()
+      renameMySelf()
+      Meteor.call('setUserSelection',docId,oldName , null )
+      Meteor.call('setUserSelection',docId, getUserName(), quill.getSelection() )
+
+    })
 
   // Tell meteor to load the document
   Meteor.subscribe('docById',docId);
@@ -53,6 +63,8 @@ export function setupUI(){
     if(!isSetup){
       isSetup=true
       document.body.removeChild(document.getElementById('loadingText'))
+
+
     }
 
     // This way we keep our selection. However, if the user was typing
@@ -63,7 +75,7 @@ export function setupUI(){
     const selections=[]
     for(const userId in doc.selections){
       const s=doc.selections[userId]
-      if(s.time>Date.now()-2*60*1000 && userId!=userName) {
+      if(s.time>Date.now()-2*60*1000 && userId!=getUserName()) {
         selections.push({
           ...quill.getBounds(s.range),
         userId
@@ -75,23 +87,12 @@ export function setupUI(){
 }
 
 function selectionToHTML({top, left, width, height, userId}) {
-  const hue=hash(userId)%360
   const position=`top:${top.toFixed(2)}px;left:${left.toFixed(2)}px;width:${width.toFixed(2)}px;height:${height.toFixed(2)}px;`
-  const highlightColor=`background:hsla(${hue}, 100%, 50%, 0.1);`
-  const nameColor=`background:hsla(${hue}, 90%, 80%, 0.9);`
+  const highlightColor=`background: ${userColor(userId, 0.1)};`
+  const nameColor=`background:${userColor(userId, 1)};`
     return `
       <div style="${position} ${highlightColor}">
         <div style="${nameColor}">${userId}</div>
       </div>
       `
-}
-
-function hash(str) {
-  var hash = 0, i, chr;
-  for (i = 0; i < str.length; i++) {
-    chr   = str.charCodeAt(i);
-    hash  = ((hash << 5) - hash) + chr;
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash;
 }
