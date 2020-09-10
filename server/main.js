@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { Docs } from '/imports/api/Docs'; 
+import { Docs } from '/imports/api/Docs';
 
 const defaultText=`
 This is a real time text editor. 

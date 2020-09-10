@@ -23,7 +23,7 @@ export function setupUI(){
     // The source might be API if the content of the text box changed
     // to reflect the work of a remote user
     if (source === 'user') {
-      Meteor.call('userEditedDocument',docId, delta, lastApplied )
+      Meteor.call('userEditedDocument',docId, delta )
     }
   });
 
@@ -49,10 +49,6 @@ export function setupUI(){
       document.body.removeChild(document.getElementById('loadingText'))
     }
 
-    // The edits happened faster than we could update, and therefore
-    // they happened to a different version than what we had.
-    // That's not a huge deal, we just do a diff of the document and
-    // apply it.
     // This way we keep our selection. However, if the user was typing
     // when this happened, he might see a jump / loose a few letters
     const diff = new Delta(quill.getContents()).diff(new Delta(doc.content))
