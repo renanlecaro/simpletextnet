@@ -21,6 +21,25 @@ Meteor.methods({
         edits:1
       }
     })
+  },
+  setUserSelection(docId, userName, range){
+    if(!range){
+      Docs.update(docId,{
+        $unset:{
+          ['selections.'+userName]:''
+        },
+      })
+    }
+    else
+    Docs.update(docId,{
+      $set:{
+        // The new content is the old content with the fix applied
+        ['selections.'+userName]:{
+          range, time:Date.now()
+        }
+
+      },
+    })
   }
 })
 

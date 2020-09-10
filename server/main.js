@@ -23,6 +23,7 @@ Meteor.publish('docById', function (id) {
       ],
       lastEdit:new Date(),
       edits:1,
+      selections:{}
     })
   }
   return Docs.find(id)

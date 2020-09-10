@@ -9,6 +9,16 @@ body {
 *{
   box-sizing: border-box;
 }
+
+#loadingText{
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  font-size: 20px;
+  text-align: center;
+  z-index: 1;
+}
 #editor{
   min-height: 100vh;
 }
@@ -24,14 +34,26 @@ body {
 #editor>.ql-editor{
   background: white;
 }
-#loadingText{
+
+.editor-wrap{
+  position: relative;
+}
+#selections{
+  pointer-events: none;
+}
+#selections>div{
   position: absolute;
-  top: 50%;
+  z-index: 3;
+  min-width: 1px;
+}
+#selections>div>div{
+  position: absolute;
   left: 0;
-  right: 0;
-  font-size: 20px;
-  text-align: center;
-  z-index: 1;
+  bottom:100%;
+  font-size: 12px;
+  color: white;
+  padding: 2px;
+  border-radius: 5px;
 }
 
 footer a{
