@@ -5,13 +5,8 @@ import {Tracker} from "meteor/tracker";
 import {Docs} from "../api/Docs";
 import 'quill/dist/quill.core.css'
 import Delta from 'quill-delta'
+import {userName} from "./userName";
 
-let userName = localStorage.getItem('userName')
-if(!userName) {
-  while(!(userName = prompt('Please enter a username (only letter and numbers, no space)')
-    .trim().replace(/[^a-z0-9]/gi,'')));
-  localStorage.setItem('userName',userName)
-}
 
 export function setupUI(){
 
@@ -35,9 +30,7 @@ export function setupUI(){
   });
 
   quill.on('selection-change', function (range) {
-
     Meteor.call('setUserSelection',docId, userName, range )
-    //getBounds
   })
 
   // Tell meteor to load the document
@@ -78,7 +71,6 @@ export function setupUI(){
       }
     }
     document.getElementById("selections").innerHTML=selections.map(selectionToHTML).join('')
- 
   })
 }
 
