@@ -2,13 +2,14 @@ import {Random} from "meteor/random";
 import Quill from "quill/dist/quill.core";
 import {Meteor} from "meteor/meteor";
 import {Tracker} from "meteor/tracker";
-import jexcel from "jexcel";
-import "jexcel/dist/jexcel.css";
+// import jexcel from "jexcel";
+// import "jexcel/dist/jexcel.css";
 // import "jexcel/dist/jexcel.theme.css";
 
 import {Docs} from "../api/Docs";
 
 import {getUserName, renameMySelf, userColor} from "./userName";
+import Importabular from "./Importabular";
 
 export default function setupTableEditor(docId){
   document.getElementById('editor-wrap').style.display=""
@@ -17,6 +18,11 @@ export default function setupTableEditor(docId){
 
   let editor;
 
+  const instance = new Importabular({
+    node:document.getElementById('editor'),
+    data:[[1,'2',3,null],[4,2,0,'Hello']]
+  })
+  return
 
   Meteor.subscribe('docById',docId);
   let isSetup=false;
