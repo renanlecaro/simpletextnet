@@ -7,19 +7,25 @@
 
 <body>
 
-<div class="editor-wrap">
+<noscript>You need Javascript on to run this app</noscript>
+
+<div id="editor-wrap" style="display: none">
     <div id="editor"></div>
     <div id="selections"></div>
 
+    <div id="loadingText">
+        Loading ...
+    </div>
 </div>
-<div id="loadingText">
-    Loading ...
-    <noscript>You need Javascript on to run this app</noscript>
-</div>
-  <footer><div>
-      <h2>This is a collaborative text editor</h2>
-      Current user name : <button class="button" id="renameMySelf" style="display: none"></button>
-      <p>Create a <a class="button" href="/" target="_blank">new document</a>, share the link of the page, and edit it with your friends. </p>
+  <footer id="footer"><div>
+      <h2>simple text link : minimalist realtime document editor</h2>
+     <div id="currentUserName" style="display: none">
+         <p>Current user name : <button class="button" id="renameMySelf" style="display: none"></button></p>
+     </div>
+      <p>Create a new
+          <button id="new-text-document" class="button">text</button> or
+          <button id="new-sheet-document" class="button">table</button>
+          , share the link of the page, and edit it with your friends. </p>
       <p>Brought to you by <a href="https://renanlecaro.github.io/" target="_blank">Renan LE CARO</a>.</p>
       <p>The source code is <a href="https://github.com/renanlecaro/simpletextnet">on github</a>.</p>
 

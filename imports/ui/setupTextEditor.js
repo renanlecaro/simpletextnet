@@ -8,15 +8,9 @@ import Delta from 'quill-delta'
 import {getUserName, renameMySelf, userColor} from "./userName";
 
 
-export function setupUI(){
+export default function setupTextEditor(docId){
+  document.getElementById('editor-wrap').style.display=""
 
-  // We either use the provided id, or redirect to a new
-  // page with a random ID
-  let docId=window.location.pathname.slice(1)
-  if(!docId){
-    docId=Random.id()
-    history.replaceState(null, '', '/'+docId)
-  }
 
   // Setup the text editor
   const quill = new Quill('#editor')
@@ -56,15 +50,14 @@ export function setupUI(){
     const doc=Docs.findOne(docId)
 
     // The doc might still be loading
-    if(!doc) return console.debug('No document yet')
+    if(!doc) return
 
 
     // The doc loaded for the first time
     if(!isSetup){
       isSetup=true
-      document.body.removeChild(document.getElementById('loadingText'))
-
-
+      const loading = document.getElementById('loadingText')
+      loading.parentElement.removeChild(loading)
     }
 
     // This way we keep our selection. However, if the user was typing

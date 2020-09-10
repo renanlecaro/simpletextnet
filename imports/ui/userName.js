@@ -3,6 +3,7 @@ let userName = localStorage.getItem('userName')
 
 function updateButton() {
 
+  document.getElementById('currentUserName').style.display='';
   const btn=document.getElementById('renameMySelf');
   btn.innerText=userName;
   btn.style=''

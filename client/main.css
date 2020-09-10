@@ -36,7 +36,7 @@ body {
   min-height: 100vh;
 }
 
-.editor-wrap{
+#editor-wrap{
   position: relative;
 }
 #selections{
@@ -74,4 +74,8 @@ footer a{
   opacity: 1;
 }
 
+.jexcel {
+  width: 100vh;
+  height: 100vh;
 
+}
