@@ -6,6 +6,7 @@ body {
   color: #666;
   font-size: 16px;
 }
+
 *{
   box-sizing: border-box;
 }
@@ -24,7 +25,6 @@ body {
 }
 #editor>.ql-editor , footer>div{
   padding: 40px;
-  min-height: 100vh;
   color: #000;
   font-size: 14px;
   line-height: 28px;
@@ -33,6 +33,7 @@ body {
 }
 #editor>.ql-editor{
   background: white;
+  min-height: 100vh;
 }
 
 .editor-wrap{
@@ -72,3 +73,5 @@ footer a{
 .button:hover,.button:focus{
   opacity: 1;
 }
+
+
