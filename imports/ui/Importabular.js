@@ -10,7 +10,38 @@ function isEmpty(obj) {
   return Object.keys(obj).length === 0
 }
 
-let currentId=0
+function parsePasteEvent(event) {
+  try{
+
+    const html = (event.clipboardData || window.clipboardData).getData('text/html')
+    const table=html.match(/<table[^>]*>(.*)<\/table[^>]*>/gi);
+
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(html);
+    iframe.contentWindow.document.close();
+
+    const trs=iframe.contentWindow.document.querySelectorAll('tr')
+    const data=[];
+    Array.prototype.forEach.call(trs, (tr, y)=>{
+      const tds=tr.querySelectorAll('td')
+      Array.prototype.forEach.call(tds, (td, x)=>{
+        const text=td.innerText;
+        if(!data[y]) data[y]=[]
+        data[y][x]=text
+      })
+    })
+    if(data.length) return data
+
+  }catch (e) {
+  }
+
+  console.warn('Using basic parsing')
+  return (event.clipboardData || window.clipboardData).getData('text')
+    .split(/\r\n|\n|\r/).map(row => row.split('\t'))
+}
+
 export default class Importabular{
   data=[['']]
   parent=null
@@ -55,39 +86,88 @@ export default class Importabular{
     table.appendChild(tbody)
     this.parent.appendChild(table)
     this.tbody=tbody
-    table.addEventListener('mousedown', this.mousedown, true)
-    table.addEventListener('mouseenter', this.mouseenter, true)
-    table.addEventListener('mouseup', this.mouseup, true)
-
+    this.table=table
+    tbody.addEventListener('mousedown', this.mousedown, true)
+    tbody.addEventListener('mouseenter', this.mouseenter, true)
+    tbody.addEventListener('mouseup', this.mouseup, true)
+    tbody.addEventListener('mouseleave', this.mouseleave)
     document.addEventListener('keydown', this.keydown, true)
-
-    table.addEventListener('mouseleave', this.mouseleave)
+    document.addEventListener('paste', this.paste)
   }
+  paste(e){
+    e.preventDefault();
+    const rows=parsePasteEvent(e)
+    console.table(rows)
+  }
+  destroy(){
+    this.destroyEditing()
 
+    // Remove global listeners
+    const tbody=this.tbody
+    tbody.removeEventListener('mousedown', this.mousedown, true)
+    tbody.removeEventListener('mouseenter', this.mouseenter, true)
+    tbody.removeEventListener('mouseup', this.mouseup, true)
+    tbody.removeEventListener('mouseleave', this.mouseleave)
+    document.removeEventListener('keydown', this.keydown, true)
+    document.removeEventListener('paste', this.paste)
+    this.table.parentElement.removeChild(this.table)
+  }
 
   keydown=e=>{
     const code=e.keyCode
 
-    if(this.selectionStart && code===13){
-      // enter
-      const {x,y}=this.selectionStart
-      this.changeSelection(()=>{
-        this.selectionStart=this.selectionEnd = {x, y:y+1}
-      })
-      e.preventDefault()
-    }else if(event.key.length === 1 && this.selectionStart && !this.editing){
-      this.changeSelection(()=>{
-        const {x,y}=this.selectionStart
-        this.setVal(x,y, event.key)
-        this.startEditing({x,y})
-      })
-    }else{
-      console.log({
-        'event.key':event.key,
-        'this.selectionStart':!!this.selectionStart,
-        'this.editing':!!this.editing
-      })
+    if(this.selectionStart){
+
+      if(e.key==='Enter' || e.key==='ArrowDown'){
+        e.preventDefault()
+        this.moveCursor({y:1})
+      }
+      if(e.key==='ArrowUp'){
+        e.preventDefault()
+        this.moveCursor({y:-1})
+      }
+      if(e.key==='ArrowLeft'){
+        e.preventDefault()
+        this.moveCursor({x:-1})
+      }
+      if(e.key==='ArrowRight'){
+        e.preventDefault()
+        this.moveCursor({x:+1})
+      }
+      if(e.key==='Tab'){
+        e.preventDefault()
+        this.moveCursor({x:e.shiftKey?-1:1})
+      }
+      if(e.key==='Delete' || e.key==='Backspace'){
+        e.preventDefault()
+        this.setAllSelectedCellsTo('')
+      }
+
+      if(e.key.length === 1 && !this.editing){
+        this.changeSelectedCellsStyle(()=>{
+          const {x,y}=this.selectionStart
+          // We clear the value of the cell, and the keyup event will
+          // happen with the cursor inside the cell and type the character there
+          this.setVal(x,y, '')
+          this.startEditing({x,y})
+        })
+      }
     }
+  }
+  setAllSelectedCellsTo(value){
+    this.forSelectionCoord(this.selection,({x,y})=>this.setVal(x,y,value))
+    this.forSelectionCoord(this.selection,this.refreshDisplayedValue)
+  }
+  moveCursor({x=0,y=0}){
+    const curr=this.selectionStart
+    const nc = {x:curr.x+x, y:curr.y+y}
+    if(nc.x<0) return
+    if(nc.y<0) return
+    if(nc.x>=this.width) return;
+    if(nc.y>=this.height) return;
+    this.changeSelectedCellsStyle(()=>{
+      this.selectionStart=this.selectionEnd =nc
+    })
   }
   selecting=false;
   selectionStart=null
@@ -96,7 +176,7 @@ export default class Importabular{
   editing=null
 
   mousedown=e=>{
-    this.changeSelection(()=>{
+    this.changeSelectedCellsStyle(()=>{
       this.tbody.style.userSelect='none'
       this.selectionStart=this.getCoords(e);
       this.selectionEnd=this.selectionStart
@@ -105,7 +185,7 @@ export default class Importabular{
   }
   mouseenter=e=>{
     if(this.selecting){
-      this.changeSelection(()=>{
+      this.changeSelectedCellsStyle(()=>{
         this.selectionEnd=this.getCoords(e);
       })
     }
@@ -119,7 +199,7 @@ export default class Importabular{
   }
   mouseup=e=>{
     if(this.selecting){
-      this.changeSelection(()=>{
+      this.changeSelectedCellsStyle(()=>{
         this.selectionEnd=this.getCoords(e);
        this.endSelection()
 
@@ -152,12 +232,18 @@ export default class Importabular{
     input.value=this.getVal(x,y)
     td.appendChild(input)
     input.focus()
-
     input.addEventListener('blur', this.stopEditing)
     input.addEventListener('keydown', this.blurIfEnter)
-
   }
 
+  destroyEditing(){
+    if(this.editing){
+      const {x,y}=this.editing
+      const input=this.getCell(x,y).firstChild
+      input.removeEventListener('blur', this.stopEditing)
+      input.removeEventListener('keydown', this.blurIfEnter)
+    }
+  }
 
   stopEditing=e=>{
     console.debug(`stopEditing()`)
@@ -179,12 +265,12 @@ export default class Importabular{
       e.preventDefault()
     }
   }
-  changeSelection(callback){
+  changeSelectedCellsStyle(callback){
     const oldS=this.selection
     callback()
     this.selection=this.getSelectionCoords()
     const updated=this.selectionUnion(oldS,this.selection)
-    this.forSelectionCoord(updated,this.rerender)
+    this.forSelectionCoord(updated,this.restyle)
   }
   selectionUnion(s1,s2){
     if(s1.rx[0] === s1.rx[1]) return s2
@@ -209,9 +295,16 @@ export default class Importabular{
       for(let y=ry[0];y<ry[1];y++)
         cb({x,y})
   }
-  rerender=({x,y})=>{
+  restyle=({x,y})=>{
     Object.assign(this.getCell(x,y).firstChild.style,
       this.cellStyle(x,y))
+  }
+  refreshDisplayedValue=({x,y})=>{
+    const div=this.getCell(x,y).firstChild
+    if(div.tagName==='DIV'){
+      div.innerText=this.getVal(x,y)
+    }
+    this.restyle({x,y})
   }
 
 
@@ -261,7 +354,7 @@ export default class Importabular{
       }
     }
   }
-   getVal(x,y) {
+  getVal(x,y) {
     const hash=this.data
     return hash && hash[x] && hash[x][y] || ''
   }
@@ -276,6 +369,7 @@ export default class Importabular{
   getCell(x,y){
     return this.tbody.children[y].children[x]
   }
+
 
   cellStyle(x,y){
     const {selected,onlySelected, editTarget,editing}=this.getStatus(x,y)
