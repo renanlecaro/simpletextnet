@@ -14,7 +14,6 @@ function parsePasteEvent(event) {
   try{
 
     const html = (event.clipboardData || window.clipboardData).getData('text/html')
-    const table=html.match(/<table[^>]*>(.*)<\/table[^>]*>/gi);
 
     const iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
@@ -32,6 +31,8 @@ function parsePasteEvent(event) {
         data[y][x]=text
       })
     })
+
+    document.body.removeChild(iframe);
     if(data.length) return data
 
   }catch (e) {
