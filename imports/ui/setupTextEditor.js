@@ -5,7 +5,7 @@ import {Tracker} from "meteor/tracker";
 import {Docs} from "../api/Docs";
 import 'quill/dist/quill.core.css'
 import Delta from 'quill-delta'
-import {getUserName, renameMySelf, userColor} from "./userName";
+import {askForARealName, getUserName, renameMySelf, userColor} from "./userName";
 
 
 export default function setupTextEditor(docId){
@@ -24,6 +24,7 @@ export default function setupTextEditor(docId){
   });
 
   quill.on('selection-change', function (range) {
+    askForARealName()
     Meteor.call('setUserSelection',docId, getUserName(), range )
   })
 

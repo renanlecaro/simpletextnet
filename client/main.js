@@ -19,7 +19,7 @@ function setupButton(id, type){
 Meteor.startup(function () {
 
   setupButton('new-text-document', 'plain_text');
-  setupButton('new-sheet-document', 'sheet');
+  // setupButton('new-sheet-document', 'sheet');
 
 
   let docId=window.location.pathname.slice(1)

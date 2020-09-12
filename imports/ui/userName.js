@@ -1,25 +1,26 @@
-
 let userName = localStorage.getItem('userName')
 
 function updateButton() {
-
+  if(!userName) return
   document.getElementById('currentUserName').style.display='';
   const btn=document.getElementById('renameMySelf');
   btn.innerText=userName;
   btn.style=''
 }
 
+export function askForARealName() {
+  if(!getUserName()) renameMySelf()
+}
+
 export function renameMySelf() {
-  while(!(userName = prompt('Please enter your name', userName||'')
-    .replace(/[^a-z0-9 _-]/gi,'').trim()));
+  while(!(userName = prompt('Please enter your name, for other editors to know who you are.', userName||'')
+    .replace(/[.<>"']/gi,' ').trim()));
   localStorage.setItem('userName',userName)
   updateButton()
 }
-if(!userName) {
-  renameMySelf()
-}else{
-  updateButton()
-}
+
+updateButton()
+
 
 
 export function getUserName() {
