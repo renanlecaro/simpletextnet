@@ -1,6 +1,13 @@
 import { Meteor } from 'meteor/meteor';
+import Importabular from "../imports/ui/Importabular";
 
-import('/imports/ui/setupTableEditor').then(setup=>setup.default('docId'));
+
+document.getElementById('editor-wrap').style.display=''
+document.getElementById('loadingText').style.display='none'
+const instance = new Importabular({
+  node:document.getElementById('editor'),
+  data:[[1,'2',3,null],[4,2,0,'Hello']]
+})
 
 if(false){
 

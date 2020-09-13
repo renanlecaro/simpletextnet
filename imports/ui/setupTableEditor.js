@@ -1,11 +1,6 @@
-import {Random} from "meteor/random";
-import Quill from "quill/dist/quill.core";
+
 import {Meteor} from "meteor/meteor";
 import {Tracker} from "meteor/tracker";
-// import jexcel from "jexcel";
-// import "jexcel/dist/jexcel.css";
-// import "jexcel/dist/jexcel.theme.css";
-
 import {Docs} from "../api/Docs";
 
 import {getUserName, renameMySelf, userColor} from "./userName";

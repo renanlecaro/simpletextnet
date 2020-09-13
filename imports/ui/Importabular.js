@@ -9,7 +9,19 @@ function cleanVal(val){
 function isEmpty(obj) {
   return Object.keys(obj).length === 0
 }
-
+function arrToHTML(arr) {
+  const table=document.createElement('table')
+  arr.forEach(row=>{
+    const tr=document.createElement('tr')
+    table.appendChild(tr)
+    row.forEach(cell=>{
+      const td=document.createElement('td')
+      tr.appendChild(td)
+      td.innerText=cell
+    })
+  })
+  return table.outerHTML
+}
 function parsePasteEvent(event) {
   try{
 
@@ -33,25 +45,43 @@ function parsePasteEvent(event) {
     })
 
     document.body.removeChild(iframe);
-    if(data.length) return data
+    if(data.length) return ensureDimensions(data)
 
   }catch (e) {
   }
 
   console.warn('Using basic parsing')
-  return (event.clipboardData || window.clipboardData).getData('text')
+  const fromText= (event.clipboardData || window.clipboardData).getData('text')
     .split(/\r\n|\n|\r/).map(row => row.split('\t'))
+  return ensureDimensions(fromText)
 }
 
-export default class Importabular{
-  data=[['']]
-  parent=null
+function ensureDimensions(rows) {
+  if(!rows || !rows.length || !rows[0].length) return []
+  const width=rows[0].length
+  const height=rows.length
+  const result = []
+  for(var y=0;y<height;y++){
+    result.push([])
+    for(var x=0;x<width;x++){
+      const val = rows[y][x] || ''
+      result[y].push(val)
+    }
+  }
+  return result
+}
 
+
+export default class Importabular{
+  parent=null
+  width=1
+  height=1
+  data={}
   constructor({data=[[]],node}) {
     this.parent=node
 
-    this.importArray(data)
     this.setupDom()
+    this.replaceDataWithArray(data)
   }
   renderTDContent(td, x,y){
     const div=document.createElement('div')
@@ -94,11 +124,91 @@ export default class Importabular{
     tbody.addEventListener('mouseleave', this.mouseleave)
     document.addEventListener('keydown', this.keydown, true)
     document.addEventListener('paste', this.paste)
+    document.addEventListener('cut', this.cut)
+    document.addEventListener('copy', this.copy)
   }
-  paste(e){
+
+  addCell(tr, x,y){
+    const td=document.createElement('td')
+    td.style.borderLeft = x?'1px solid #ddd':''
+    td.style.borderTop = y?'1px solid #ddd':''
+    tr.appendChild(td)
+    this.renderTDContent(td,x,y)
+  }
+
+  incrementHeight(){
+    console.log(`incrementHeight()`)
+    this.height++
+    const y=this.height-1
+    const tr=document.createElement('tr')
+
+    this.tbody.appendChild(tr)
+    for(let x=0;x<this.width;x++){
+      this.addCell(tr, x,y)
+    }
+  }
+
+  incrementWidth(){
+    console.log(`incrementWidth()`)
+    this.width++
+    const x=this.width-1
+    Array.prototype.forEach.call(this.tbody.children, (tr,y)=>{
+      this.addCell(tr, x,y)
+    })
+  }
+  incrementToFit({x,y}){
+    console.log(`incrementToFit({x:${x},y:${y})`)
+    while(x>this.width-1) this.incrementWidth()
+    while(y>this.height-1) this.incrementHeight()
+  }
+  paste=e=>{
+    if(this.editing) return
     e.preventDefault();
     const rows=parsePasteEvent(e)
-    console.table(rows)
+    const {rx,ry}= this.selection
+    const offset={x:rx[0], y:ry[0]}
+
+    rows.forEach((row, y)=>{
+      row.forEach((val, x)=>{
+        this.setVal(offset.x+x, offset.y+y, val)
+      })
+    })
+
+    this.changeSelectedCellsStyle(()=>{
+      this.selectionStart=offset
+      this.selectionEnd ={
+        x:offset.x+rows[0].length-1,
+        y:offset.y+rows.length-1
+      }
+    })
+
+  }
+  getSelectionAsArray(){
+    const {rx,ry}=this.selection
+    if(rx[0]===rx[1]) return null
+    const width=rx[1]-rx[0]
+    const height=ry[1]-ry[0]
+    const result=[]
+    for(let y=0;y<height;y++){
+      result.push([])
+      for(let x=0;x<width;x++){
+        result[y].push(this.getVal(rx[0]+x, ry[0]+y))
+      }
+    }
+    return result
+  }
+  copy=e=>{
+    const asArr=this.getSelectionAsArray()
+    if(asArr){
+      e.preventDefault()
+      e.clipboardData.setData('text/html', arrToHTML(asArr));
+      e.clipboardData.setData('text/plain', asArr.map(row=>row.join('\t')).join('\n'));
+    }
+  }
+
+  cut=e=>{
+    this.copy(e)
+    this.setAllSelectedCellsTo('')
   }
   destroy(){
     this.destroyEditing()
@@ -110,39 +220,57 @@ export default class Importabular{
     tbody.removeEventListener('mouseup', this.mouseup, true)
     tbody.removeEventListener('mouseleave', this.mouseleave)
     document.removeEventListener('keydown', this.keydown, true)
+    document.removeEventListener('copy', this.copy)
+    document.removeEventListener('cut', this.cut)
     document.removeEventListener('paste', this.paste)
+
     this.table.parentElement.removeChild(this.table)
   }
 
   keydown=e=>{
-    const code=e.keyCode
+    console.debug(e.key)
+    if(e.ctrlKey) return
 
     if(this.selectionStart){
-
-      if(e.key==='Enter' || e.key==='ArrowDown'){
+      if(e.key==='Escape' && this.editing){
+        e.preventDefault()
+        this.revertEdit()
+        this.stopEditing()
+      }
+      if(e.key==='Enter'){
         e.preventDefault()
         this.moveCursor({y:1})
       }
-      if(e.key==='ArrowUp'){
-        e.preventDefault()
-        this.moveCursor({y:-1})
-      }
-      if(e.key==='ArrowLeft'){
-        e.preventDefault()
-        this.moveCursor({x:-1})
-      }
-      if(e.key==='ArrowRight'){
-        e.preventDefault()
-        this.moveCursor({x:+1})
-      }
+
       if(e.key==='Tab'){
         e.preventDefault()
         this.moveCursor({x:e.shiftKey?-1:1})
       }
-      if(e.key==='Delete' || e.key==='Backspace'){
-        e.preventDefault()
-        this.setAllSelectedCellsTo('')
+      if(!this.editing){
+
+        if(e.key==='Delete' || e.key==='Backspace'){
+          e.preventDefault()
+          this.setAllSelectedCellsTo('')
+        }
+        if(e.key==='ArrowDown'){
+          e.preventDefault()
+          this.moveCursor({y:1})
+        }
+
+        if(e.key==='ArrowUp'){
+          e.preventDefault()
+          this.moveCursor({y:-1})
+        }
+        if(e.key==='ArrowLeft'){
+          e.preventDefault()
+          this.moveCursor({x:-1})
+        }
+        if(e.key==='ArrowRight'){
+          e.preventDefault()
+          this.moveCursor({x:+1})
+        }
       }
+
 
       if(e.key.length === 1 && !this.editing){
         this.changeSelectedCellsStyle(()=>{
@@ -160,12 +288,16 @@ export default class Importabular{
     this.forSelectionCoord(this.selection,this.refreshDisplayedValue)
   }
   moveCursor({x=0,y=0}){
+
+    this.stopEditing()
+
     const curr=this.selectionStart
     const nc = {x:curr.x+x, y:curr.y+y}
     if(nc.x<0) return
     if(nc.y<0) return
-    if(nc.x>=this.width) return;
-    if(nc.y>=this.height) return;
+    this.incrementToFit(nc)
+    // if(nc.x>=this.width) return;
+    // if(nc.y>=this.height) return;
     this.changeSelectedCellsStyle(()=>{
       this.selectionStart=this.selectionEnd =nc
     })
@@ -245,24 +377,31 @@ export default class Importabular{
       input.removeEventListener('keydown', this.blurIfEnter)
     }
   }
-
-  stopEditing=e=>{
-    console.debug(`stopEditing()`)
-    e.target.removeEventListener('blur', this.stopEditing)
-    e.target.removeEventListener('keydown', this.blurIfEnter)
+  revertEdit(){
+    if(!this.editing) return
     const {x,y}=this.editing
     const td=this.getCell(x,y)
-    this.setVal(x,y,td.firstChild.value)
-    td.removeChild(td.firstChild)
+    const input = td.firstChild
+    input.value=this.getVal(x,y)
+  }
+  stopEditing=()=>{
+    console.debug(`stopEditing()`)
+    if(!this.editing) return
+    const {x,y}=this.editing
+    const td=this.getCell(x,y)
+    const input = td.firstChild
+    input.removeEventListener('blur', this.stopEditing)
+    input.removeEventListener('keydown', this.blurIfEnter)
+    this.setVal(x,y,input.value)
+    td.removeChild(input)
     this.editing=null
-
     this.renderTDContent(td, x,y)
   }
   blurIfEnter=e=>{
     const code=e.keyCode
     if(code===13){
       // enter
-      this.stopEditing(e)
+      this.stopEditing()
       e.preventDefault()
     }
   }
@@ -270,18 +409,8 @@ export default class Importabular{
     const oldS=this.selection
     callback()
     this.selection=this.getSelectionCoords()
-    const updated=this.selectionUnion(oldS,this.selection)
-    this.forSelectionCoord(updated,this.restyle)
-  }
-  selectionUnion(s1,s2){
-    if(s1.rx[0] === s1.rx[1]) return s2
-    if(s2.rx[0] === s2.rx[1]) return s1
-    const x = [...s1.rx, ...s2.rx]
-    const y = [...s1.ry,... s2.ry]
-    return {
-      rx:[Math.min(...x), Math.max(...x)],
-      ry:[Math.min(...y), Math.max(...y)]
-    }
+    this.forSelectionCoord(oldS,this.restyle)
+    this.forSelectionCoord(this.selection,this.restyle)
   }
   getSelectionCoords(){
     if(!this.selectionStart) return {rx:[0,0], ry:[0,0]}
@@ -322,11 +451,7 @@ export default class Importabular{
   }
 
 
-  importArray(data) {
-    this.data={}
-    this.width=1;
-    this.height=1;
-
+  replaceDataWithArray(data) {
     data.forEach((line, y)=>{
       line.forEach((val, x)=>{
         this.setVal( x,y, val)
@@ -337,15 +462,11 @@ export default class Importabular{
     const hash=this.data
     const cleanedVal=cleanVal(val)
     if(cleanedVal){
+
+      this.incrementToFit({x,y})
+
       if(!hash[x])hash[x]={}
       hash[x][y] = cleanedVal
-      if(x+2>=this.width){
-        this.width=x+2
-      }
-      if(y+2>=this.height){
-        this.height=y+2
-      }
-
     }else{
       // delete item
       if(hash[x] && hash[x][y]){
@@ -354,7 +475,10 @@ export default class Importabular{
           delete hash[x]
       }
     }
+    this.incrementToFit({x:x+1,y:y+1})
+    this.refreshDisplayedValue({x,y})
   }
+
   getVal(x,y) {
     const hash=this.data
     return hash && hash[x] && hash[x][y] || ''
