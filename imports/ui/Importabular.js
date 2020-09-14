@@ -1,14 +1,6 @@
 
 
 
-function cleanVal(val){
-  if(val === 0) return '0'
-  if(!val) return ''
-  return val.toString()
-}
-function isEmpty(obj) {
-  return Object.keys(obj).length === 0
-}
 function arrToHTML(arr) {
   const table=document.createElement('table')
   arr.forEach(row=>{
@@ -50,7 +42,7 @@ function parsePasteEvent(event) {
   }catch (e) {
   }
 
-  console.warn('Using basic parsing')
+
   const fromText= (event.clipboardData || window.clipboardData).getData('text')
     .split(/\r\n|\n|\r/).map(row => row.split('\t'))
   return ensureDimensions(fromText)
@@ -76,12 +68,32 @@ export default class Importabular{
   parent=null
   width=1
   height=1
-  data={}
-  constructor({data=[[]],node}) {
+  data=new LooseArray()
+  options={
+    onChange:null,
+    onSelectionChange:null
+  }
+  constructor({data=[],node, ...options}) {
     this.parent=node
-
+    Object.assign(this.options, options)
     this.setupDom()
     this.replaceDataWithArray(data)
+  }
+  onDataChanged(){
+    if(this.options.onChange){
+      this.options.onChange(this.data.toArr())
+    }
+  }
+  setData(data){
+     this.data.clear()
+    data.forEach((row,y)=>
+    row.forEach((val,x)=>
+      this.setVal(x,y,val)
+    ))
+    for(let x=0;x<this.width;x++)
+    for(let y=0;y<this.height;y++)
+      this.refreshDisplayedValue({x,y})
+
   }
   renderTDContent(td, x,y){
     const div=document.createElement('div')
@@ -94,30 +106,33 @@ export default class Importabular{
       // Force no collapse of cell
       div.innerHTML='&nbsp;'
     }
-    Object.assign(div.style,this.cellStyle(x,y,val))
     td.appendChild(div)
+    this.restyle({x,y})
+
+  }
+  tableStyle={
+    borderSpacing:0,
+    background:'white'
   }
   setupDom(){
     const table=document.createElement('table')
     const tbody=document.createElement('tbody')
-    table.cellSpacing=0
-    table.cellPadding=0
-    for(let y=0;y<this.height;y++){
-      const tr=document.createElement('tr')
-      tbody.appendChild(tr)
-      for(let x=0;x<this.width;x++){
-        const td=document.createElement('td')
-        td.style.borderLeft = x?'1px solid #ddd':''
-        td.style.borderTop = y?'1px solid #ddd':''
-        tr.appendChild(td)
-        this.renderTDContent(td,x,y)
-      }
-    }
+    Object.assign(table.style,this.tableStyle)
+
 
     table.appendChild(tbody)
     this.parent.appendChild(table)
     this.tbody=tbody
     this.table=table
+
+    for(let y=0;y<this.height;y++){
+      const tr=document.createElement('tr')
+      tbody.appendChild(tr)
+      for(let x=0;x<this.width;x++){
+        this.addCell(tr,x,y)
+      }
+    }
+
     tbody.addEventListener('mousedown', this.mousedown, true)
     tbody.addEventListener('mouseenter', this.mouseenter, true)
     tbody.addEventListener('mouseup', this.mouseup, true)
@@ -130,14 +145,12 @@ export default class Importabular{
 
   addCell(tr, x,y){
     const td=document.createElement('td')
-    td.style.borderLeft = x?'1px solid #ddd':''
-    td.style.borderTop = y?'1px solid #ddd':''
     tr.appendChild(td)
     this.renderTDContent(td,x,y)
   }
 
   incrementHeight(){
-    console.log(`incrementHeight()`)
+
     this.height++
     const y=this.height-1
     const tr=document.createElement('tr')
@@ -149,7 +162,7 @@ export default class Importabular{
   }
 
   incrementWidth(){
-    console.log(`incrementWidth()`)
+
     this.width++
     const x=this.width-1
     Array.prototype.forEach.call(this.tbody.children, (tr,y)=>{
@@ -157,7 +170,7 @@ export default class Importabular{
     })
   }
   incrementToFit({x,y}){
-    console.log(`incrementToFit({x:${x},y:${y})`)
+
     while(x>this.width-1) this.incrementWidth()
     while(y>this.height-1) this.incrementHeight()
   }
@@ -181,7 +194,7 @@ export default class Importabular{
         y:offset.y+rows.length-1
       }
     })
-
+    this.onDataChanged()
   }
   getSelectionAsArray(){
     const {rx,ry}=this.selection
@@ -228,7 +241,7 @@ export default class Importabular{
   }
 
   keydown=e=>{
-    console.debug(e.key)
+
     if(e.ctrlKey) return
 
     if(this.selectionStart){
@@ -277,8 +290,8 @@ export default class Importabular{
           const {x,y}=this.selectionStart
           // We clear the value of the cell, and the keyup event will
           // happen with the cursor inside the cell and type the character there
-          this.setVal(x,y, '')
           this.startEditing({x,y})
+          this.getCell(x,y).firstChild.value=''
         })
       }
     }
@@ -286,6 +299,8 @@ export default class Importabular{
   setAllSelectedCellsTo(value){
     this.forSelectionCoord(this.selection,({x,y})=>this.setVal(x,y,value))
     this.forSelectionCoord(this.selection,this.refreshDisplayedValue)
+
+    this.onDataChanged()
   }
   moveCursor({x=0,y=0}){
 
@@ -354,7 +369,7 @@ export default class Importabular{
     }
   }
   startEditing({x,y}){
-    console.debug(`startEditing({${x},${y})`)
+
     this.editing={x,y}
     const td=this.getCell(x,y)
     const {width,height}=td.firstChild.getBoundingClientRect()
@@ -385,7 +400,6 @@ export default class Importabular{
     input.value=this.getVal(x,y)
   }
   stopEditing=()=>{
-    console.debug(`stopEditing()`)
     if(!this.editing) return
     const {x,y}=this.editing
     const td=this.getCell(x,y)
@@ -396,6 +410,7 @@ export default class Importabular{
     td.removeChild(input)
     this.editing=null
     this.renderTDContent(td, x,y)
+    this.onDataChanged()
   }
   blurIfEnter=e=>{
     const code=e.keyCode
@@ -411,6 +426,9 @@ export default class Importabular{
     this.selection=this.getSelectionCoords()
     this.forSelectionCoord(oldS,this.restyle)
     this.forSelectionCoord(this.selection,this.restyle)
+    if(this.options.onSelectionChange){
+      this.options.onSelectionChange(this.selection)
+    }
   }
   getSelectionCoords(){
     if(!this.selectionStart) return {rx:[0,0], ry:[0,0]}
@@ -426,9 +444,43 @@ export default class Importabular{
         cb({x,y})
   }
   restyle=({x,y})=>{
-    Object.assign(this.getCell(x,y).firstChild.style,
-      this.cellStyle(x,y))
+
+    const status =this.getStatus(x,y)
+    const cell=this.getCell(x,y)
+
+    Object.assign(cell.style, this.TDStyle(x,y,status))
+    Object.assign(cell.firstChild.style, this.contentStyle(x,y,status))
   }
+
+  TDStyle(x,y,{selected,onlySelected, editTarget,editing}){
+
+    return {
+      padding:0,
+      background:selected && !editing && !onlySelected?'#d7f2f9':'',
+      borderStyle:'solid',
+      borderWidth:'1px',
+      borderColor:editTarget && !editing ? 'black' : (
+        [y ? '#ddd':'transparent','transparent','transparent',
+          x ? '#ddd':'transparent'].join(' ')
+      )
+    }
+  }
+  contentStyle(x,y,{selected,onlySelected, editTarget,editing}){
+    return {
+      border:'none',
+      padding:'0 10px',
+      minWidth:'100px',
+      minHeight:'40px',
+      lineHeight:'40px',
+      width:editing?this.editingSize.width+'px':'',
+      height:editing?this.editingSize.height+'px':'',
+      fontFamily:'inherit',
+      fontSize:'inherit',
+      color:'inherit',
+      boxSizing:'border-box',
+    }
+  }
+
   refreshDisplayedValue=({x,y})=>{
     const div=this.getCell(x,y).firstChild
     if(div.tagName==='DIV'){
@@ -457,31 +509,17 @@ export default class Importabular{
         this.setVal( x,y, val)
       })
     })
+
+    this.onDataChanged()
   }
   setVal( x,y,val){
-    const hash=this.data
-    const cleanedVal=cleanVal(val)
-    if(cleanedVal){
-
-      this.incrementToFit({x,y})
-
-      if(!hash[x])hash[x]={}
-      hash[x][y] = cleanedVal
-    }else{
-      // delete item
-      if(hash[x] && hash[x][y]){
-        delete hash[x][y]
-        if(isEmpty(hash[x]))
-          delete hash[x]
-      }
-    }
+    this.data.setVal( x,y, val)
     this.incrementToFit({x:x+1,y:y+1})
     this.refreshDisplayedValue({x,y})
   }
 
   getVal(x,y) {
-    const hash=this.data
-    return hash && hash[x] && hash[x][y] || ''
+    return this.data.getVal(x,y)
   }
   getStatus(x,y){
     const {rx,ry} = this.selection
@@ -495,24 +533,57 @@ export default class Importabular{
     return this.tbody.children[y].children[x]
   }
 
+}
 
-  cellStyle(x,y){
-    const {selected,onlySelected, editTarget,editing}=this.getStatus(x,y)
-
-    return {
-      background:selected && !editing && !onlySelected?'#d7f2f9':'white',
-      border:editTarget && !editing?
-        '1px solid black':
-        '1px solid transparent',
-      padding:'0 10px',
-      minWidth:'100px',
-      minHeight:'40px',
-      lineHeight:'40px',
-      width:editing?this.editingSize.width+'px':'',
-      height:editing?this.editingSize.height+'px':'',
-      fontFamily:'inherit',
-      fontSize:'inherit',
-      color:'inherit',
+class LooseArray{
+  // An 2D array of strings that only stores non "" values
+  data={}
+  setVal( x,y,val){
+    const hash=this.data
+    const cleanedVal=LooseArray.cleanVal(val)
+    if(cleanedVal){
+      if(!hash[x])hash[x]={}
+      hash[x][y] = cleanedVal
+    }else{
+      // delete item
+      if(hash[x] && hash[x][y]){
+        delete hash[x][y]
+        if(LooseArray.isEmpty(hash[x]))
+          delete hash[x]
+      }
     }
   }
+  clear(){
+    this.data={}
+  }
+  getVal(x,y) {
+    const hash=this.data
+    return hash && hash[x] && hash[x][y] || ''
+  }
+  static cleanVal(val){
+    if(val === 0) return '0'
+    if(!val) return ''
+    return val.toString()
+  }
+  static isEmpty(obj) {
+    return Object.keys(obj).length === 0
+  }
+  toArr(){
+    let width=1, height=1;
+    for(let x in this.data){
+      for(let y in this.data[x]){
+        height=Math.max(height, parseInt(y)+1)
+        width=Math.max(width, parseInt(x)+1)
+      }
+    }
+    const result=[];
+    for(let y = 0; y<height;y++){
+      result.push([])
+      for(let x = 0; x<width; x++){
+        result[y].push(this.getVal(x,y))
+      }
+    }
+    return result
+  }
+
 }
