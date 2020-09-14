@@ -83,7 +83,7 @@ Meteor.methods({
       }
     })
   },
-  setUserSelection(docId, userName, range){
+  'document.selection.update'(docId, userName, range){
     if(!range){
       Docs.update(docId,{
         $unset:{

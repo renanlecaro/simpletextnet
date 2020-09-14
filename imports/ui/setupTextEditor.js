@@ -25,7 +25,7 @@ export default function setupTextEditor(docId){
 
   quill.on('selection-change', function (range) {
     askForARealName()
-    Meteor.call('setUserSelection',docId, getUserName(), range )
+    Meteor.call('document.selection.update',docId, getUserName(), range )
   })
 
   document.getElementById('renameMySelf')
@@ -33,8 +33,8 @@ export default function setupTextEditor(docId){
       e.preventDefault()
       const oldName=getUserName()
       renameMySelf()
-      Meteor.call('setUserSelection',docId,oldName , null )
-      Meteor.call('setUserSelection',docId, getUserName(), quill.getSelection() )
+      Meteor.call('document.selection.update',docId,oldName , null )
+      Meteor.call('document.selection.update',docId, getUserName(), quill.getSelection() )
 
     })
 
