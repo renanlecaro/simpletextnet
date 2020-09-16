@@ -4,7 +4,7 @@ import {Tracker} from "meteor/tracker";
 import {Docs} from "../api/Docs";
 
 import {askForARealName, getUserName, renameMySelf, userColor} from "./userName";
-import Importabular from "./Importabular";
+import Importabular from "importabular";
 
 
 
