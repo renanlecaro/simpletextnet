@@ -13,5 +13,6 @@ jobs:
       - uses: actions/checkout@v2
       - run: npm install --production
       - run: npm install mup
+      - run: curl https://install.meteor.com/ | sh
       - run: cd ./.production && npx mup deploy
       
