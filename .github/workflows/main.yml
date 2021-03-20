@@ -12,7 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: npm install --production
-      - run: npm install --global mup
       - run: cd .production
-      - run: mup deploy
+      - run: npx mup deploy
       
