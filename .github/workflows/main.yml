@@ -12,6 +12,8 @@
 # - add the output of "ssh-keyscan -H [IP OF YOUR DO SERVER]" in your repository as the secret "KNOWN_HOSTS" (learn more https://is.gd/edNByI)
 # - make sure your droplet accepts the new key pair, run cat ~/.ssh/id_rsa_do.pub | ssh root@[IP OF YOUR DO SERVER] "cat >> ~/.ssh/authorized_keys" ( learn more https://is.gd/Ufjpvq)
 # - to make builds faster, list dev only dependencies as devDependencies in package.json ( learn more https://is.gd/0spDMp )
+# - add this file to your app, in the same folder as here (.github/workflows/main.yml)
+# - change the last command of this script so that it finds your mup.js file 
 
 name: Deploy meteor app to digital ocean with meteor up
 on:
