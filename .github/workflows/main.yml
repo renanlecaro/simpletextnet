@@ -10,13 +10,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - run: npm install --production
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - run: ssh root@188.166.160.106 -t "pwd"
+      - uses: actions/checkout@v2
+      - run: npm install --production
       - run: npm install mup
       - run: curl https://install.meteor.com/ | sh
       - run: cd ./.production && npx mup deploy
