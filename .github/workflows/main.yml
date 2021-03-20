@@ -15,6 +15,7 @@ jobs:
         with:
           key: ${{ secrets.SSH_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - run: ls ~/.ssh
       - run: ssh root@188.166.160.106 -t "pwd"
       - uses: actions/checkout@v2
       - run: npm install --production
