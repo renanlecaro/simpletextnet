@@ -54,6 +54,6 @@ jobs:
 
       # upload the bundle. Here, the .production folder is app specific. You need to get to the folder with your
       # mup.js file.
-      - name: Upload the bundle to Digita Ocean
+      - name: Bundle the app and upload to Digital Ocean
         run: cd ./.production && npx mup deploy
 
