@@ -13,8 +13,8 @@ jobs:
       - uses: actions/checkout@v2
       - run: npm install --production
       - run: npm install mup
-      - run: ls      
-      - run: cd .production
+      - run: ls -a
+      - run: cd ./.production
       - run: ls
       - run: npx mup deploy
       
