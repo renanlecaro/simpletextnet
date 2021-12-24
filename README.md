@@ -1,7 +1,7 @@
 # Open source collaborative text editor
 
 This is a barebone implementation of a collaborative text editor, that you can try here
-https://simpletext.link
+https://txt.lecaro.me/
 
 When you open the homepage, you get a new document with a unique URL. 
 You can edit it (plain text only). You can share the URL and your friends will also 
