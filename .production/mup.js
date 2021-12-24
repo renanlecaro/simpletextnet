@@ -21,7 +21,7 @@ module.exports = {
     },
 
     env: {
-      ROOT_URL: 'https://simpletext.link',
+      ROOT_URL: 'https://txt.lecaro.me',
       MONGO_URL: 'mongodb://mongodb/meteor',
       MONGO_OPLOG_URL: 'mongodb://mongodb/local',
       ENV: 'PRODUCTION',
@@ -41,7 +41,7 @@ module.exports = {
     },
   },
   proxy: {
-    domains: 'simpletext.link'
+    domains: 'txt.lecaro.me'
   }
 
 };
